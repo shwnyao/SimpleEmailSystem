@@ -2,7 +2,7 @@
 import socket
 import threading
 import sys
-import datetime
+import time
 
 
 class EmailAccountMananger():
@@ -32,8 +32,8 @@ class EmailAccountMananger():
     def send_email(self, email):
         recipient_mailbox_filename = email.recipient + ".txt"
         fd = open(recipient_mailbox_filename, "a")
-        fd.write(email.gen_txt())
         fd.write("\n")
+        fd.write(email.gen_txt())
         fd.close()
 
     def get_mailbox_headers(self):
@@ -132,8 +132,11 @@ class EmailDraft():
         self.content = content
 
     def gen_txt(self):
-        txt = "*FROM {}\n".format(self.sender) + "TITLE {}\n".format(
-            self.title) + "Time {}\n".format(datetime.datetime.now()) + self.content + "\n"
+        t = time.strftime("%a, %d %b %Y %H:%M:%S %Z", time.gmtime())
+        txt = "*FROM {}\n".format(self.sender) + \
+            "TITLE {}\n".format(self.title) + \
+            "Time {}\n".format(t) + \
+            self.content
 
         return txt
 
@@ -165,7 +168,7 @@ class ServerThread(threading.Thread):
         conn_sock.close()
 
     def process_cmd(self, request: str):
-        cmd = request.split()
+        cmd = request.split(' ')
         # print(cmd)
         response = ""
         if cmd[0] == "#USERNAME":
@@ -190,9 +193,8 @@ class ServerThread(threading.Thread):
         elif cmd[0] == "#CONTENT":
             content = None if len(cmd) < 2 else " ".join(cmd[1:])
             response = self.draft_content_handler(content)
-
-        elif cmd[0] == ".":
-            reponse = self.draft_send_handler()
+            if response == None:
+                response = self.draft_send_handler()
 
         elif cmd[0] == "#LIST":
             response = self.mailbox_list_handler()

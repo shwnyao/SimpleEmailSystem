@@ -2,29 +2,11 @@
 import socket
 import sys
 
-# open TCP client socket
-
-# read input cmd from keyboard
-
-# compose msg
-
-# send msg to server
-
-
-def is_valid_cmd(buf):
-    if not buf:
-        return False
-    cmd_list = ["#USERNAME", "#PASSWORD", "#SENDTO", "#TITLE",
-                "#CONTENT", ".", "#LIST", "#RETRIEVE", "#DELETE", "#EXIT"]
-    buf = buf.split()
-    return buf[0] in cmd_list
-
 
 def main(argv):
     SERVER_IP = "127.0.0.1"
     SERVER_PORT = 8000
 
-    # create socket and connect to server
     try:
         sockfd = socket.socket()
         sockfd.settimeout(10)
@@ -33,22 +15,33 @@ def main(argv):
         print("Socket error: ", emsg)
         sys.exit(1)
 
-    read_buf = ""
-    while read_buf != "exit":
+    while True:
         read_buf = input()
-        if not is_valid_cmd(read_buf):
-            print("invalid command")
-            continue
+        request = read_buf
+
+        if read_buf == "exit":
+            break
+        elif read_buf == "#CONTENT":
+            request += " "
+            while True:
+                read_buf = input()
+                if read_buf == ".":
+                    break
+                elif not read_buf:
+                    continue
+                request += "{}\n".format(read_buf)
 
         try:
-            sockfd.send(read_buf.encode())
-        except:
+            sockfd.send(request.encode())
+        except socket.error as emsg:
+            print(emsg)
             break
 
         try:
             rmsg = sockfd.recv(1024).decode()
             print(rmsg)
         except socket.error as emsg:
+            print(emsg)
             continue
 
     sockfd.close()
