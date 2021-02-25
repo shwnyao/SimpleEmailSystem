@@ -1,4 +1,5 @@
 *.pdf
+*.zip
 .DS_Store
 Alice.txt
 Bob.txt
